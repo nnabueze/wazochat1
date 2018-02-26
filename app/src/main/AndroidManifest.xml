@@ -18,7 +18,8 @@
         </activity>
         <activity android:name=".SignUpActivity" />
         <activity android:name=".ChatDialogsActivity" />
-        <activity android:name=".ListUserActivity"></activity>
+        <activity android:name=".ListUserActivity" />
+        <activity android:name=".ChatMessageActivity"></activity>
     </application>
 
 </manifest>

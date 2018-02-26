@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import com.example.user.wazochat.Adapter.ListUsersAdapter;
 import com.example.user.wazochat.Common.Common;
+import com.example.user.wazochat.Holder.QBUserHolder;
 import com.quickblox.chat.QBChatService;
 import com.quickblox.chat.QBRestChatService;
 import com.quickblox.chat.model.QBChatDialog;
@@ -125,6 +126,10 @@ public class ListUserActivity extends AppCompatActivity {
         QBUsers.getUsers(null).performAsync(new QBEntityCallback<ArrayList<QBUser>>() {
             @Override
             public void onSuccess(ArrayList<QBUser> qbUsers, Bundle bundle) {
+
+                //adding user to cache
+                QBUserHolder.getInstance().putUsers(qbUsers);
+
                 ArrayList<QBUser> qbUserWithoutCurrent = new ArrayList<QBUser>();
                 for (QBUser user: qbUsers){
                     if (!user.getLogin().equals(QBChatService.getInstance().getUser().getLogin())){
