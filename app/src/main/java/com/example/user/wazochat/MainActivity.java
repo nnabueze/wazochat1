@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
                         intent.putExtra("user",userLogin);
                         intent.putExtra("password",password);
                         startActivity(intent);
+                        finish();
                     }
 
                     @Override
