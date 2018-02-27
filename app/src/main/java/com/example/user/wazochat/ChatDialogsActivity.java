@@ -12,13 +12,18 @@ import android.widget.ListView;
 
 import com.example.user.wazochat.Adapter.ChatDialogAdapters;
 import com.example.user.wazochat.Common.Common;
+import com.example.user.wazochat.Holder.QBChatDialogHolder;
 import com.example.user.wazochat.Holder.QBUserHolder;
 import com.quickblox.auth.QBAuth;
 import com.quickblox.auth.session.BaseService;
 import com.quickblox.auth.session.QBSession;
 import com.quickblox.chat.QBChatService;
 import com.quickblox.chat.QBRestChatService;
+import com.quickblox.chat.QBSystemMessagesManager;
+import com.quickblox.chat.exception.QBChatException;
+import com.quickblox.chat.listeners.QBSystemMessageListener;
 import com.quickblox.chat.model.QBChatDialog;
+import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.core.QBEntityCallback;
 import com.quickblox.core.exception.BaseServiceException;
 import com.quickblox.core.exception.QBResponseException;
@@ -28,7 +33,7 @@ import com.quickblox.users.model.QBUser;
 
 import java.util.ArrayList;
 
-public class ChatDialogsActivity extends AppCompatActivity {
+public class ChatDialogsActivity extends AppCompatActivity implements QBSystemMessageListener {
 
     FloatingActionButton floatingActionButton;
     ListView lstChatDialog;
@@ -76,6 +81,8 @@ public class ChatDialogsActivity extends AppCompatActivity {
         QBRestChatService.getChatDialogs(null, requestBuilder).performAsync(new QBEntityCallback<ArrayList<QBChatDialog>>() {
             @Override
             public void onSuccess(ArrayList<QBChatDialog> qbChatDialogs, Bundle bundle) {
+                //put all dialog to cache
+                QBChatDialogHolder.getInstatnce().putDialogs(qbChatDialogs);
                 ChatDialogAdapters adapter = new ChatDialogAdapters(getBaseContext(), qbChatDialogs);
                 lstChatDialog.setAdapter(adapter);
                 adapter.notifyDataSetChanged();
@@ -125,6 +132,9 @@ public class ChatDialogsActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(Object o, Bundle bundle) {
                         mDialog.dismiss();
+
+                        QBSystemMessagesManager qbSystemMessagesManager = QBChatService.getInstance().getSystemMessagesManager();
+                        qbSystemMessagesManager.addSystemMessageListener(ChatDialogsActivity.this);
                     }
 
                     @Override
@@ -139,5 +149,30 @@ public class ChatDialogsActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    @Override
+    public void processMessage(QBChatMessage qbChatMessage) {
+        //put dialog to cache
+        QBRestChatService.getChatDialogById(qbChatMessage.getBody()).performAsync(new QBEntityCallback<QBChatDialog>() {
+            @Override
+            public void onSuccess(QBChatDialog qbChatDialog, Bundle bundle) {
+                QBChatDialogHolder.getInstatnce().putDialog(qbChatDialog);
+                ArrayList<QBChatDialog> adpterSource = QBChatDialogHolder.getInstatnce().getAllChatDialogs();
+                ChatDialogAdapters adapters = new ChatDialogAdapters(getBaseContext(), adpterSource);
+                lstChatDialog.setAdapter(adapters);
+                adapters.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onError(QBResponseException e) {
+
+            }
+        });
+    }
+
+    @Override
+    public void processError(QBChatException e, QBChatMessage qbChatMessage) {
+        Log.e("Error",""+e.getMessage());
     }
 }
